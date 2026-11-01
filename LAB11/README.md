@@ -12,4 +12,4 @@ Train a small PyTorch RNN with attention on the provided question-and-answer dat
 - `dataset/Lab_11_QnA_Dataset.csv`
 
 ## Run
-Use Jupyter or Colab with `pandas`, `torch`, `tensorflow`, and `matplotlib`. Run the notebook from its LAB11 folder or the repository root. The dataset is already included. The RNN uses batch-first sequences and ignores padding positions in the attention scores.
+Use Jupyter or Colab with `pandas`, `torch`, `tensorflow`, and `matplotlib`. Run the notebook from its LAB11 folder or the repository root. The dataset is included, and Colab can fetch the same CSV from this GitHub repository if it is not on the local runtime. The RNN uses batch-first sequences and ignores padding positions in the attention scores.

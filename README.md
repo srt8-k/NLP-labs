@@ -14,6 +14,11 @@ This repository contains my completed Natural Language Processing lab work, orga
 | [LAB6](./LAB6) | Deep Learning for NLP | TF-IDF/Word2Vec representations and PyTorch neural networks |
 | [LAB7](./LAB7) | Large Language Models | Transformer families, sentiment classification and summarization |
 
+| [LAB8](./LAB8) | Part-of-Speech Tagging | NLTK/spaCy POS tags, ambiguous words, displaCy |
+| [LAB9](./LAB9) | Named Entity Recognition | spaCy entities, custom rules and NER training |
+| [LAB10](./LAB10) | Machine Translation | Encoder–decoder LSTM and English–French translation |
+| [LAB11](./LAB11) | Attention with RNN | Q&A classification and attention visualizations |
+
 ## Tools and Libraries
 
 The notebooks use Python and common NLP / machine-learning libraries, including:
@@ -27,6 +32,7 @@ The notebooks use Python and common NLP / machine-learning libraries, including:
 - PyTorch
 - Hugging Face Transformers
 - kagglehub
+- TensorFlow
 
 ## Running the Labs
 

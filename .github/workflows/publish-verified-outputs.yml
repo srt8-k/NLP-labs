@@ -1,0 +1,58 @@
+name: Publish verified NLP outputs
+
+on:
+  push:
+    paths:
+      - ".github/workflows/publish-verified-outputs.yml"
+  workflow_run:
+    workflows: ["Save notebook outputs"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download successful notebooks
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id || 41809359882 }}
+          pattern: output-*
+          merge-multiple: true
+          path: executed/
+      - name: Commit verified outputs
+        shell: bash
+        run: |
+          shopt -s nullglob
+          notebooks=(executed/LAB*/*.ipynb)
+          if [ ${#notebooks[@]} -eq 0 ]; then
+            echo "No executed notebooks available yet."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git checkout -B main origin/main
+            cp -r executed/LAB* ./
+            git add -- 'LAB*/*.ipynb'
+            if git diff --cached --quiet; then
+              echo "All downloaded notebook outputs were already published."
+              exit 0
+            fi
+            git commit -m "Publish saved outputs from successful NLP lab runs"
+            if git push origin HEAD:main; then
+              echo "Notebooks published successfully."
+              exit 0
+            fi
+            echo "Push conflict. Retrying on latest main..."
+          done
+          exit 1

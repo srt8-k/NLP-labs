@@ -1,0 +1,106 @@
+name: Save notebook outputs
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/save-notebook-outputs.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  execute:
+    name: Execute ${{ matrix.lab }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    strategy:
+      fail-fast: false
+      matrix:
+        lab: [LAB1, LAB2, LAB3, LAB4, LAB5, LAB6, LAB7, LAB8, LAB9, LAB10, LAB11]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install notebook dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install nbformat nbclient ipykernel ipython pandas numpy scikit-learn nltk kagglehub gensim scipy matplotlib
+          case "${{ matrix.lab }}" in
+            LAB3) python -m pip install emoji ;;
+            LAB2|LAB8|LAB9)
+              python -m pip install spacy
+              python -m spacy download en_core_web_sm
+              ;;
+            LAB6|LAB11)
+              python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+              ;;
+            LAB7)
+              python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+              python -m pip install "transformers<5" sentencepiece
+              ;;
+          esac
+          case "${{ matrix.lab }}" in
+            LAB10|LAB11) python -m pip install tensorflow-cpu ;;
+          esac
+          python - <<'PY'
+          import nltk
+          for package in ("punkt", "punkt_tab", "stopwords", "wordnet", "omw-1.4", "averaged_perceptron_tagger_eng"):
+              nltk.download(package, quiet=True)
+          PY
+      - name: Create Colab-compatible dataset directory
+        run: sudo mkdir -p /content && sudo chmod 777 /content
+      - name: Run all cells and validate outputs
+        run: python .github/scripts/execute_labs.py "${{ matrix.lab }}"
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: output-${{ matrix.lab }}
+          path: executed/
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: report-${{ matrix.lab }}
+          path: run_reports/
+          if-no-files-found: warn
+          retention-days: 7
+
+  publish:
+    name: Publish successfully executed notebooks
+    needs: execute
+    if: always() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download real notebook outputs
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: output-*
+          path: executed/
+          merge-multiple: true
+      - name: Commit notebooks only if their Run All succeeded
+        shell: bash
+        run: |
+          if [ ! -d executed ]; then
+            echo "No successful notebooks to commit."
+            exit 0
+          fi
+          find executed -name '*.ipynb' -print
+          cp -r executed/* ./
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add 'LAB*/*.ipynb'
+          if git diff --cached --quiet; then
+            echo "No notebook updates."
+            exit 0
+          fi
+          git commit -m "Save verified outputs from executed NLP notebooks"
+          git push

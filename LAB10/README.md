@@ -1,14 +1,16 @@
 # LAB10 — Introduction to Machine Translation
 
 ## Overview
-Practice tokenization and encoder–decoder LSTM translation from English to French.
+Practice English–French translation using an encoder–decoder LSTM.
 
 ## Completed Tasks
 - Task 1: Short answers about Embedding, Encoder LSTM, Decoder LSTM, and softmax.
-- Task 2: Download the specified English–French Kaggle dataset, train a small sequence-to-sequence LSTM, evaluate and show a translation.
+- Task 2: Download the specified English–French Kaggle dataset and train an encoder–decoder LSTM.
+- Use teacher forcing so the decoder learns to predict the next French token.
+- Evaluate token accuracy without counting padding, and print three actual test translations.
 
 ## Files
 - `Lab10_Introduction_to_Machine_Translation-2.ipynb`
 
 ## Run
-Use Jupyter or Colab with `tensorflow`, `numpy`, `pandas`, `scikit-learn`, and `kagglehub`. Install missing packages before running. The Kaggle dataset downloads at runtime and needs internet access. Task 2 uses a 2,000-pair sample and five epochs to keep the lab manageable; translation quality is not expected to be high.
+Use Jupyter or Google Colab with `tensorflow`, `numpy`, `pandas`, `scikit-learn`, and `kagglehub`. Run all cells and save the notebook with outputs. The dataset is downloaded from Kaggle at runtime.

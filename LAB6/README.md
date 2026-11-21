@@ -17,7 +17,7 @@ The notebook first demonstrates a TF-IDF-based neural network and then completes
   - `window=5`
   - `min_count=1`
   - `sg=1`
-- Represent each review using a single averaged Word2Vec vector
+- Represent each review using a single averaged Word2Vec vector, then scale the features using training-only statistics
 - Convert the vectors into PyTorch tensors
 
 ### Task 2 — Neural Network
@@ -44,7 +44,7 @@ Training configuration:
 - Learning rate = 0.001
 - 15 epochs
 
-The final section evaluates the model using test accuracy.
+The final section evaluates the model using test accuracy and compares it with the TF-IDF model. The Word2Vec vectors are standardized using a scaler fitted on training data only, and Word2Vec is trained for 20 passes.
 
 ## Files
 

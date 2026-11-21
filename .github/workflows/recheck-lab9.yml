@@ -1,0 +1,61 @@
+name: Recheck and save LAB9 outputs
+on:
+  push:
+    paths:
+      - ".github/workflows/recheck-lab9.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  lab9:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install spaCy and notebook tools
+        run: |
+          python -m pip install -q nbclient nbformat ipykernel spacy
+          python -m spacy download en_core_web_sm
+      - name: Run LAB9 from top to bottom
+        run: |
+          python - <<'PY'
+          import nbformat
+          from nbclient import NotebookClient
+          from pathlib import Path
+          path = Path("LAB9/Lab9_Named_Entity_Recognition.ipynb")
+          nb = nbformat.read(path, as_version=4)
+          output = NotebookClient(nb, timeout=600, kernel_name="python3", allow_errors=False, resources={"metadata":{"path":"LAB9"}}).execute()
+          codes = [c for c in output.cells if c.cell_type == "code"]
+          assert len(codes) == 7
+          assert all(c.execution_count is not None for c in codes)
+          assert all(c.outputs for c in codes)
+          assert all(o.output_type != "error" for c in codes for o in c.outputs)
+          text = "".join("".join(o.get("text", [])) if isinstance(o.get("text", []), list) else o.get("text", "") for o in output.cells[21].outputs)
+          print("Checking org count in Task 2:", text[-1000:])
+          assert "ORG count: 2" in text, text
+          assert "PERSON count: 1" in text, text
+          nbformat.write(output, path)
+          print("LAB9 verified: 7 code cells, 0 errors, both company names counted")
+          PY
+      - name: Push notebook with outputs
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3 4; do
+            git fetch origin main
+            git checkout -B main origin/main
+            git add LAB9/*.ipynb
+            if git diff --cached --quiet; then
+              exit 0
+            fi
+            git commit -m "Save corrected LAB9 NER outputs"
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            sleep 3
+          done
+          exit 1

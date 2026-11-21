@@ -18,6 +18,7 @@ This repository contains my Natural Language Processing (NLP) lab work. Each lab
 | [LAB10](./LAB10) | Introduction to Machine Translation | English–French translation using an encoder–decoder LSTM |
 | [LAB11](./LAB11) | Attention with RNN | Question classification, attention weights, and comparison of similar questions |
 | [LAB12](./LAB12) | Transformers | DistilBERT example, BERT layer and head counts, and self-attention visualization |
+| [LAB13](./LAB13) | Information Retrieval for RAG | TF-IDF search, cosine similarity, top-k results, and updating the retrieval collection |
 
 ## Tools and Libraries
 

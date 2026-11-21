@@ -1,0 +1,62 @@
+name: Retrain LAB10 and save real outputs
+on:
+  push:
+    paths:
+      - ".github/workflows/retrain-lab10.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      TF_CPP_MIN_LOG_LEVEL: "2"
+      TF_NUM_INTEROP_THREADS: "2"
+      TF_NUM_INTRAOP_THREADS: "2"
+      OMP_NUM_THREADS: "2"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install libraries
+        run: |
+          python -m pip install -q --upgrade pip
+          python -m pip install -q nbformat nbclient ipykernel ipython pandas numpy scikit-learn kagglehub tensorflow-cpu
+      - name: Prepare LAB10 improvements
+        run: python .github/scripts/retrain_lab10.py
+      - name: Run All and validate saved outputs
+        run: python .github/scripts/execute_labs.py LAB10
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: lab10-improved-results
+          path: executed/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lab10-improved-report
+          path: run_reports/
+          if-no-files-found: warn
+      - name: Push notebook with results
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git checkout -B main origin/main
+            cp executed/LAB10/Lab10_Introduction_to_Machine_Translation-2.ipynb LAB10/
+            git add LAB10/*.ipynb
+            if git diff --cached --quiet; then
+              exit 0
+            fi
+            git commit -m "Save retrained LAB10 translations and evaluation outputs"
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            sleep 3
+          done
+          exit 1
